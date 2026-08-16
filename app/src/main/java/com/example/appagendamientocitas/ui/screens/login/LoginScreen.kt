@@ -149,7 +149,6 @@ fun LoginScreen(
             }
         }
 
-        // Pista para pruebas (puedes borrarla luego)
         Spacer(Modifier.height(16.dp))
         Text(
             text = "Dueño: admin / 1234",

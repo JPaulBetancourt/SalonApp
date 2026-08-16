@@ -45,7 +45,6 @@ fun AppNavGraph(
     }
 }
 
-/** Vuelve al login limpiando todo el backstack. */
 private fun navigateToLogin(navController: NavHostController) {
     navController.navigate(Screen.Login) {
         popUpTo(0) { inclusive = true }

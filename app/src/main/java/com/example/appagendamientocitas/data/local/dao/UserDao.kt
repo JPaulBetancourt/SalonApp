@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface UserDao {
 
-    @Insert(onConflict = OnConflictStrategy.ABORT) // Falla si el email ya existe
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(user: User): Long
 
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")

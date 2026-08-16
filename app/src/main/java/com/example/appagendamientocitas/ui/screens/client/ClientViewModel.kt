@@ -33,7 +33,6 @@ class ClientViewModel @Inject constructor(
         val clientId = sessionManager.getCurrentUserId()
         _uiState.update { it.copy(userName = sessionManager.getCurrentUserName()) }
 
-        // Lista reactiva de MIS citas
         viewModelScope.launch {
             observeMine(clientId).collect { list ->
                 _uiState.update { it.copy(myAppointments = list) }
@@ -45,7 +44,6 @@ class ClientViewModel @Inject constructor(
     fun onDateChange(v: String) = update { it.copy(date = v, formError = null, successMessage = null) }
     fun onTimeChange(v: String) = update { it.copy(time = v, formError = null, successMessage = null) }
 
-    /** Validación en vivo: ¿está libre este slot? (feedback inmediato antes de enviar). */
     fun checkSlot() {
         val s = _uiState.value
         if (s.date.isBlank() || s.time.isBlank()) return

@@ -8,11 +8,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Sesión simple con SharedPreferences.
- * Permite saber quién está logueado al navegar entre pantallas
- * y al reiniciar la app.
- */
 @Singleton
 class SessionManager @Inject constructor(
     @ApplicationContext private val context: Context

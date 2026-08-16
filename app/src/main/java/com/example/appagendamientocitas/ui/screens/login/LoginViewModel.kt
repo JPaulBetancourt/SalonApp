@@ -31,14 +31,9 @@ class LoginViewModel @Inject constructor(
         it.copy(isRegisterMode = !it.isRegisterMode, errorMessage = null)
     }
 
-    /**
-     * Entrada única: valida campos, ejecuta el caso de uso correspondiente
-     * y, si tiene éxito, guarda la sesión y notifica a la UI.
-     */
     fun submit(onSuccess: (UserRole) -> Unit) {
         val state = _uiState.value
 
-        // Validaciones de UI (rápidas, sin tocar la BD)
         val validationError = validate(state)
         if (validationError != null) {
             update { it.copy(errorMessage = validationError) }

@@ -16,7 +16,6 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(email: String, password: String): Result<User> {
         val cleanEmail = email.trim()
 
-        // 1) Dueño: credenciales hardcodeadas
         if (cleanEmail == ADMIN_USER && password == ADMIN_PASS) {
             return Result.success(
                 User(
@@ -29,7 +28,6 @@ class AuthRepositoryImpl @Inject constructor(
             )
         }
 
-        // 2) Cliente: contra Room
         val user = userDao.findByEmail(cleanEmail)
             ?: return Result.failure(IllegalArgumentException("Credenciales inválidas"))
 
@@ -52,7 +50,6 @@ class AuthRepositoryImpl @Inject constructor(
             val id = userDao.insert(newUser).toInt()
             Result.success(newUser.copy(id = id))
         } catch (e: SQLiteConstraintException) {
-            // Índice único de email (OnConflictStrategy.ABORT)
             Result.failure(IllegalArgumentException("El email ya está registrado"))
         }
     }
@@ -60,6 +57,6 @@ class AuthRepositoryImpl @Inject constructor(
     private companion object {
         const val ADMIN_USER = "admin"
         const val ADMIN_PASS = "1234"
-        const val ADMIN_ID = 0 // Reservado para el dueño
+        const val ADMIN_ID = 0
     }
 }

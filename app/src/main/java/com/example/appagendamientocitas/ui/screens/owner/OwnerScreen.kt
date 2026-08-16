@@ -100,7 +100,6 @@ private fun AppointmentOwnerCard(
                 AppointmentStatusBadge(appointment.status)
             }
 
-            // Acciones según estado
             Spacer(Modifier.height(8.dp))
             when (appointment.status) {
                 AppointmentStatus.PENDING -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
