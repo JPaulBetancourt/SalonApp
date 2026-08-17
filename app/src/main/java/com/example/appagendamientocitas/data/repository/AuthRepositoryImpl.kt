@@ -5,6 +5,9 @@ import com.example.appagendamientocitas.data.local.dao.UserDao
 import com.example.appagendamientocitas.data.local.entity.User
 import com.example.appagendamientocitas.data.local.entity.UserRole
 import com.example.appagendamientocitas.domain.repository.AuthRepository
+import com.example.appagendamientocitas.util.PasswordHasher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,6 +19,9 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login(email: String, password: String): Result<User> {
         val cleanEmail = email.trim()
 
+        // 1) Dueño: credencial demo embebida en el binario.
+        //    ADR-01 (README): el hashing protege contraseñas ALMACENADAS;
+        //    esta credencial es un backdoor de demo, decisión consciente.
         if (cleanEmail == ADMIN_USER && password == ADMIN_PASS) {
             return Result.success(
                 User(
@@ -28,10 +34,16 @@ class AuthRepositoryImpl @Inject constructor(
             )
         }
 
+        // 2) Cliente: verificación contra el hash almacenado en Room
         val user = userDao.findByEmail(cleanEmail)
             ?: return Result.failure(IllegalArgumentException("Credenciales inválidas"))
 
-        return if (user.password == password) Result.success(user)
+        // PBKDF2 es costoso → fuera del hilo principal
+        val ok = withContext(Dispatchers.IO) {
+            PasswordHasher.verify(password, user.password)
+        }
+
+        return if (ok) Result.success(user)
         else Result.failure(IllegalArgumentException("Credenciales inválidas"))
     }
 
@@ -40,10 +52,13 @@ class AuthRepositoryImpl @Inject constructor(
         email: String,
         password: String
     ): Result<User> {
+        // Nunca guardamos texto plano: solo "salt:hash"
+        val hashed = withContext(Dispatchers.IO) { PasswordHasher.hash(password) }
+
         val newUser = User(
             name = name.trim(),
             email = email.trim(),
-            password = password,
+            password = hashed,
             role = UserRole.CLIENT
         )
         return try {

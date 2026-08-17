@@ -40,6 +40,7 @@ class AppointmentRepositoryImpl @Inject constructor(
     override suspend fun updateStatus(id: Int, status: AppointmentStatus) {
         appointmentDao.updateStatus(id, status)
 
+        // 🔔 Invariante central: el recordatorio sigue al estado de la cita
         val appointment = appointmentDao.getById(id) ?: return
         if (status == AppointmentStatus.APPROVED) {
             alarmScheduler.schedule(appointment)
