@@ -19,6 +19,12 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 - 🔔 **Recordatorios locales**: notificación al dueño 30 min antes de cada cita aprobada (AlarmManager + NotificationCompat).
 - 💾 Persistencia reactiva con Room (`Flow`) y sesión con SharedPreferences.
 
+## 📸 Capturas de pantalla
+
+| Login | Panel Cliente | Panel Dueño |
+|---|---|---|
+| ![Login](docs/screenshots/Login.png) | ![Cliente](docs/screenshots/cliente.png) | ![Dueño](docs/screenshots/owner_dashboard.png) |
+
 ## 🛠️ Stack tecnológico
 
 | Área | Tecnología |
