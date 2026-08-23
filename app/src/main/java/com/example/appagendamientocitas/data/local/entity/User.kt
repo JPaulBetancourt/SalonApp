@@ -6,12 +6,13 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "users",
-    indices = [Index(value = ["email"], unique = true)] // Un usuario por email
+    indices = [Index(value = ["email"], unique = true)]
 )
 data class User(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey val uid: String,
     val name: String,
     val email: String,
-    val password: String, // Local/demo. En producción: hashing.
-    val role: UserRole = UserRole.CLIENT
+    val password: String = "",
+    val role: UserRole = UserRole.CLIENT,
+    val fcmToken: String = ""
 )

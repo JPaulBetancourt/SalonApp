@@ -72,7 +72,7 @@ class LoginViewModel @Inject constructor(
         if (s.isRegisterMode) {
             if (s.name.isBlank()) return "Ingresa tu nombre"
             if (!s.email.contains("@")) return "El email no es válido"
-            if (s.password.length < 4) return "La contraseña debe tener al menos 4 caracteres"
+            if (s.password.length < 6) return "La contraseña debe tener al menos 6 caracteres"
         }
         return null
     }

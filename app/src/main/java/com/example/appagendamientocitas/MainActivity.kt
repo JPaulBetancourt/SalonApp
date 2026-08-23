@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.appagendamientocitas.ui.navigation.AppNavGraph
 import com.example.appagendamientocitas.ui.theme.AppAgendamientoCitasTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.google.firebase.auth.FirebaseAuth
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -30,6 +31,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         requestNotificationPermission()
         enableEdgeToEdge()
+        val auth = FirebaseAuth.getInstance()
+        android.util.Log.d("Firebase", "Firebase Auth inicializado: ${auth.currentUser?.email ?: "no hay usuario"}")
         setContent {
             AppAgendamientoCitasTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
