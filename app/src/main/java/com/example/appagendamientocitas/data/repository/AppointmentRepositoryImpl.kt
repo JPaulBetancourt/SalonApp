@@ -31,7 +31,7 @@ class AppointmentRepositoryImpl @Inject constructor(
     override fun observeAll(): Flow<List<Appointment>> =
         appointmentDao.observeAll()
 
-    override fun observeByClient(clientId: Int): Flow<List<Appointment>> =
+    override fun observeByClient(clientId: String): Flow<List<Appointment>> =
         appointmentDao.observeByClient(clientId)
 
     override suspend fun getById(id: Int): Appointment? =

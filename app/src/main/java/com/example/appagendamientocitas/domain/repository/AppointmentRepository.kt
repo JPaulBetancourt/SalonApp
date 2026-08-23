@@ -9,7 +9,7 @@ interface AppointmentRepository {
 
     fun observeAll(): Flow<List<Appointment>>
 
-    fun observeByClient(clientId: Int): Flow<List<Appointment>>
+    fun observeByClient(clientId: String): Flow<List<Appointment>>
 
     suspend fun getById(id: Int): Appointment?
 

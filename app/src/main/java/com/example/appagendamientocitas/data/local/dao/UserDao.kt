@@ -10,14 +10,14 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface UserDao {
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(user: User): Long
 
     @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
     suspend fun findByEmail(email: String): User?
 
-    @Query("SELECT * FROM users WHERE id = :id LIMIT 1")
-    suspend fun findById(id: Int): User?
+    @Query("SELECT * FROM users WHERE uid = :uid LIMIT 1")
+    suspend fun findByUid(uid: String): User?
 
     @Query("SELECT * FROM users WHERE role = 'CLIENT' ORDER BY name ASC")
     fun observeClients(): Flow<List<User>>

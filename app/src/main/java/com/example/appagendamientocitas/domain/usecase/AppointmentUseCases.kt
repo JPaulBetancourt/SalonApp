@@ -23,7 +23,7 @@ class ObserveAllAppointmentsUseCase @Inject constructor(
 class ObserveMyAppointmentsUseCase @Inject constructor(
     private val repository: AppointmentRepository
 ) {
-    operator fun invoke(clientId: Int): Flow<List<Appointment>> =
+    operator fun invoke(clientId: String): Flow<List<Appointment>> =
         repository.observeByClient(clientId)
 }
 

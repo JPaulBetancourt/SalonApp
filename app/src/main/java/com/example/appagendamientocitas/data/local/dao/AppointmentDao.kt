@@ -19,8 +19,8 @@ interface AppointmentDao {
     @Query("SELECT * FROM appointments ORDER BY date ASC, time ASC")
     fun observeAll(): Flow<List<Appointment>>
 
-    @Query("SELECT * FROM appointments WHERE clientId = :clientId ORDER BY date DESC, time DESC")
-    fun observeByClient(clientId: Int): Flow<List<Appointment>>
+    @Query("SELECT * FROM appointments WHERE clientId = :clientId ORDER BY date DESC, time DESC")  // 👈 clientId es String
+    fun observeByClient(clientId: String): Flow<List<Appointment>>
 
     @Query("UPDATE appointments SET status = :status WHERE id = :id")
     suspend fun updateStatus(id: Int, status: AppointmentStatus)

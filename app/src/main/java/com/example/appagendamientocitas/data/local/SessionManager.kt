@@ -19,13 +19,12 @@ class SessionManager @Inject constructor(
 
     fun saveSession(user: User) {
         prefs.edit()
-            .putInt(KEY_USER_ID, user.id)
+            .putString(KEY_USER_ID, user.uid)
             .putString(KEY_USER_NAME, user.name)
             .putString(KEY_USER_ROLE, user.role.name)
             .apply()
     }
-
-    fun getCurrentUserId(): Int = prefs.getInt(KEY_USER_ID, -1)
+    fun getCurrentUserId(): String = prefs.getString(KEY_USER_ID, "").orEmpty()
 
     fun getCurrentUserName(): String =
         prefs.getString(KEY_USER_NAME, "").orEmpty()

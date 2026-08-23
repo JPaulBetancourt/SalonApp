@@ -10,20 +10,20 @@ import androidx.room.PrimaryKey
     foreignKeys = [
         ForeignKey(
             entity = User::class,
-            parentColumns = ["id"],
+            parentColumns = ["uid"],
             childColumns = ["clientId"],
-            onDelete = ForeignKey.CASCADE // Si se borra el cliente, sus citas también
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [Index("clientId")]
 )
 data class Appointment(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val clientId: Int,
+    val clientId: String,
     val clientName: String,
     val service: String,
-    val date: String, // Formato "yyyy-MM-dd" → ordenable y fácil de comparar
-    val time: String, // Formato "HH:mm" (24h) → validación de slot simple
+    val date: String,
+    val time: String,
     val status: AppointmentStatus = AppointmentStatus.PENDING,
     val createdAt: Long = System.currentTimeMillis()
 )
