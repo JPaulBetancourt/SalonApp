@@ -35,9 +35,26 @@ class FirebaseAuthRepository @Inject constructor(
                 .await()
 
             val fsUser = userDoc.toObject(FirestoreUser::class.java)
-                ?: throw Exception("Datos de usuario no encontrados en Firestore")
 
-            val user = fsUser.toUser()
+            val finalFsUser = if (fsUser == null) {
+                android.util.Log.w("Login", "Documento no existe en Firestore, creando para uid: ${authUser.uid}")
+                val defaultUser = FirestoreUser(
+                    uid = authUser.uid,
+                    name = cleanEmail.substringBefore("@"),
+                    email = cleanEmail,
+                    role = "CLIENT",
+                    fcmToken = ""
+                )
+                firestore.collection("users")
+                    .document(authUser.uid)
+                    .set(defaultUser)
+                    .await()
+                defaultUser
+            } else {
+                fsUser
+            }
+
+            val user = finalFsUser.toUser()
 
             updateFcmToken(authUser.uid)
             userDao.insert(user)
@@ -98,12 +115,18 @@ class FirebaseAuthRepository @Inject constructor(
     private suspend fun updateFcmToken(uid: String) {
         try {
             val token = FirebaseMessaging.getInstance().token.await()
+
             firestore.collection("users")
                 .document(uid)
-                .update("fcmToken", token)
+                .set(
+                    mapOf("fcmToken" to token),
+                    com.google.firebase.firestore.SetOptions.merge()
+                )
                 .await()
+
+            android.util.Log.d("FCM", "Token guardado correctamente para uid: $uid")
         } catch (e: Exception) {
-            android.util.Log.e("FCM", "Error al obtener/guardar token", e)
+            android.util.Log.e("FCM", "Error al guardar token (no fatal)", e)
         }
     }
 }

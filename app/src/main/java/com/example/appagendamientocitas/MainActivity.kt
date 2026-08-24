@@ -23,16 +23,11 @@ class MainActivity : ComponentActivity() {
 
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            // Si no se concede, los recordatorios se programan
-            // pero la notificación no se mostrará (manejo graceful en NotificationHelper).
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestNotificationPermission()
         enableEdgeToEdge()
-        val auth = FirebaseAuth.getInstance()
-        android.util.Log.d("Firebase", "Firebase Auth inicializado: ${auth.currentUser?.email ?: "no hay usuario"}")
         setContent {
             AppAgendamientoCitasTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {

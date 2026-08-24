@@ -49,63 +49,89 @@ class FirestoreAppointmentRepository @Inject constructor(
     }
 
     override fun observeAll(): Flow<List<Appointment>> = callbackFlow {
-        val listener: ListenerRegistration = firestore.collection("appointments")
-            .orderBy("date")
-            .orderBy("time")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                val appointments = snapshot?.documents?.mapNotNull { doc ->
-                    try {
-                        Appointment(
-                            id = doc.id.hashCode(),
-                            clientId = doc.getString("clientId") ?: "",
-                            clientName = doc.getString("clientName") ?: "",
-                            service = doc.getString("service") ?: "",
-                            date = doc.getString("date") ?: "",
-                            time = doc.getString("time") ?: "",
-                            status = AppointmentStatus.valueOf(doc.getString("status") ?: "PENDING"),
-                            createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
-                        )
-                    } catch (e: Exception) {
-                        null
+        try {
+            val listener: ListenerRegistration = firestore.collection("appointments")
+                .orderBy("date")
+                .orderBy("time")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        android.util.Log.e("Firestore", "Error observando todas las citas: ${error.message}")
+                        if (error.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
+                            android.util.Log.w("Firestore", "Falta índice compuesto date+time")
+                            trySend(emptyList())
+                        } else {
+                            close(error)
+                        }
+                        return@addSnapshotListener
                     }
-                } ?: emptyList()
-                trySend(appointments)
-            }
-        awaitClose { listener.remove() }
+                    val appointments = snapshot?.documents?.mapNotNull { doc ->
+                        try {
+                            Appointment(
+                                id = doc.id.hashCode(),
+                                clientId = doc.getString("clientId") ?: "",
+                                clientName = doc.getString("clientName") ?: "",
+                                service = doc.getString("service") ?: "",
+                                date = doc.getString("date") ?: "",
+                                time = doc.getString("time") ?: "",
+                                status = AppointmentStatus.valueOf(doc.getString("status") ?: "PENDING"),
+                                createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
+                            )
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } ?: emptyList()
+                    trySend(appointments)
+                }
+            awaitClose { listener.remove() }
+        } catch (e: Exception) {
+            android.util.Log.e("Firestore", "Error al iniciar listener observeAll: ${e.message}")
+            trySend(emptyList())
+            awaitClose { }
+        }
     }
 
     override fun observeByClient(clientId: String): Flow<List<Appointment>> = callbackFlow {
-        val listener: ListenerRegistration = firestore.collection("appointments")
-            .whereEqualTo("clientId", clientId)
-            .orderBy("date")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
-                }
-                val appointments = snapshot?.documents?.mapNotNull { doc ->
-                    try {
-                        Appointment(
-                            id = doc.id.hashCode(),
-                            clientId = doc.getString("clientId") ?: "",
-                            clientName = doc.getString("clientName") ?: "",
-                            service = doc.getString("service") ?: "",
-                            date = doc.getString("date") ?: "",
-                            time = doc.getString("time") ?: "",
-                            status = AppointmentStatus.valueOf(doc.getString("status") ?: "PENDING"),
-                            createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
-                        )
-                    } catch (e: Exception) {
-                        null
+        try {
+            val listener: ListenerRegistration = firestore.collection("appointments")
+                .whereEqualTo("clientId", clientId)
+                .orderBy("date")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        android.util.Log.e("Firestore", "Error observando citas: ${error.message}")
+                        // Si es error de índice, enviar lista vacía en lugar de crash
+                        if (error.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
+                            android.util.Log.w("Firestore", "Falta índice compuesto. Crearlo en: https://console.firebase.google.com/project/salonapp-330df/firestore/indexes")
+                            trySend(emptyList())
+                        } else {
+                            close(error)
+                        }
+                        return@addSnapshotListener
                     }
-                } ?: emptyList()
-                trySend(appointments)
-            }
-        awaitClose { listener.remove() }
+                    val appointments = snapshot?.documents?.mapNotNull { doc ->
+                        try {
+                            Appointment(
+                                id = doc.id.hashCode(),
+                                clientId = doc.getString("clientId") ?: "",
+                                clientName = doc.getString("clientName") ?: "",
+                                service = doc.getString("service") ?: "",
+                                date = doc.getString("date") ?: "",
+                                time = doc.getString("time") ?: "",
+                                status = AppointmentStatus.valueOf(doc.getString("status") ?: "PENDING"),
+                                createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
+                            )
+                        } catch (e: Exception) {
+                            android.util.Log.e("Firestore", "Error parseando documento: ${doc.id}", e)
+                            null
+                        }
+                    } ?: emptyList()
+                    trySend(appointments)
+                }
+            awaitClose { listener.remove() }
+        } catch (e: Exception) {
+            android.util.Log.e("Firestore", "Error al iniciar listener: ${e.message}")
+            trySend(emptyList())
+            awaitClose { }
+        }
     }
 
     override suspend fun getById(id: Int): Appointment? =
