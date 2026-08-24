@@ -1,7 +1,7 @@
 package com.example.appagendamientocitas.di
 
-import com.example.appagendamientocitas.data.repository.AppointmentRepositoryImpl
 import com.example.appagendamientocitas.data.repository.FirebaseAuthRepository
+import com.example.appagendamientocitas.data.repository.FirestoreAppointmentRepository
 import com.example.appagendamientocitas.domain.repository.AppointmentRepository
 import com.example.appagendamientocitas.domain.repository.AuthRepository
 import dagger.Binds
@@ -20,5 +20,5 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindAppointmentRepository(impl: AppointmentRepositoryImpl): AppointmentRepository
+    abstract fun bindAppointmentRepository(impl: FirestoreAppointmentRepository): AppointmentRepository
 }

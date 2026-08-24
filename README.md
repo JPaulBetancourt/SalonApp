@@ -12,13 +12,13 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 
 ## ✨ Características
 
-- 🔐 Login por roles: dueño con credenciales fijas (`admin` / `1234`) y registro local de clientes.
-- 🔒 **Contraseñas hasheadas** con PBKDF2-HMAC-SHA256 (600k iteraciones, salt aleatorio).
-- 📅 **Panel Cliente**: solicitud de citas (servicio, fecha, hora) con validación de horarios ocupados contra la BD.
-- 📊 **Panel Dueño**: dashboard reactivo con contador de pendientes y acciones aprobar / rechazar / completar.
-- 🔔 **Recordatorios locales**: notificación al dueño 30 min antes de cada cita aprobada (AlarmManager + NotificationCompat).
-- 💾 Persistencia reactiva con Room (`Flow`) y sesión con SharedPreferences.
-
+- 🔐 **Autenticación segura**: Login y registro con Firebase Auth (email/password).
+- 🔒 **Seguridad de datos**: Contraseñas hasheadas con PBKDF2-HMAC-SHA256 (600k iteraciones, salt aleatorio) antes de cualquier procesamiento local.
+- ☁️ **Base de datos en la nube**: Firestore para sincronización de citas en tiempo real entre cliente y dueño, con caché local offline-first mediante Room.
+- 📅 **Panel Cliente**: Solicitud de citas con validación en vivo de disponibilidad de horarios.
+- 📊 **Panel Dueño**: Dashboard reactivo con contador de pendientes y acciones de aprobar/rechazar/completar.
+- 🔔 **Notificaciones Push**: Integración con Firebase Cloud Messaging (FCM) para recordatorios y actualizaciones de estado en tiempo real.
+- 
 ## 📸 Capturas de pantalla
 
 | Login | Panel Cliente | Panel Dueño |
@@ -33,11 +33,19 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 | UI | Jetpack Compose + Material 3 |
 | Arquitectura | MVVM + Clean Architecture (3 capas) |
 | Navegación | Navigation Compose (rutas type-safe `@Serializable`) |
-| Base de datos | Room (entidades, DAOs, TypeConverters) |
+| Base de datos | Room (caché local) + **Firestore** (fuente de verdad) |
+| Autenticación | **Firebase Auth** |
+| Notificaciones | **Firebase Cloud Messaging (FCM)** |
 | Inyección | Hilt (KSP) |
 | Seguridad | PBKDF2-HMAC-SHA256 (OWASP 2024) |
-| Recordatorios | AlarmManager + NotificationCompat |
-| Async | Coroutines + StateFlow |
+| Async | Coroutines + StateFlow + callbackFlow |
+
+## 🔐 Seguridad y decisiones de diseño (ADR)
+
+- **ADR-01 — Migración a Arquitectura Cloud**: Se evolucionó de un MVP 100% local a una arquitectura híbrida. Firestore actúa como fuente de verdad para la sincronización multi-dispositivo, mientras que Room persiste como caché local para soporte offline.
+- **ADR-02 — Seguridad de Credenciales**: Aunque Firebase Auth gestiona la autenticación, se implementó hashing local con PBKDF2-HMAC-SHA256 (600,000 iteraciones, salt aleatorio por usuario y comparación en tiempo constante) como capa adicional de defensa en profundidad y cumplimiento de estándares académicos de seguridad.
+- **ADR-03 — Notificaciones**: Se reemplazó/complementó `AlarmManager` con FCM para permitir notificaciones push escalables desde la nube, superando las limitaciones de Doze Mode de Android.
+- **Reglas de Firestore**: Configuradas para permitir lectura/escritura solo a usuarios autenticados, con validación de propiedad de documentos.
 
 ## 🏗️ Arquitectura
 
@@ -46,24 +54,34 @@ Separación en capas con **inversión de dependencia**: `domain` define contrato
 
 ```mermaid
 flowchart TB
-    subgraph UI["Presentación (ui)"]
-        SC["Screens Compose"]
-        VM["ViewModels"]
+    subgraph UI["📱 Presentación (ui)"]
+        SC["Screens Compose<br/>(Login, Client, Owner)"]
+        VM["ViewModels<br/>(StateFlow)"]
+        NAV["Navigation<br/>(Type-safe routes)"]
     end
-    subgraph DOMAIN["Dominio (domain)"]
-        UC["Use Cases"]
-        IR["Interfaces Repository"]
+    
+    subgraph DOMAIN["🎯 Dominio (domain)"]
+        UC["Use Cases<br/>(Login, CreateAppointment,<br/>ObserveAll, UpdateStatus)"]
+        IR["Repository Interfaces<br/>(AuthRepository,<br/>AppointmentRepository)"]
     end
-    subgraph DATA["Datos (data)"]
-        RR["Repository Impls"]
-        DAO["DAOs Room"]
-        DB[("AppDatabase")]
-        AL["AlarmScheduler"]
+    
+    subgraph DATA[" Datos (data)"]
+        RR["Repository Implementations<br/>(FirebaseAuthRepository,<br/>FirestoreAppointmentRepository)"]
+        FB["Firebase<br/>(Auth, Firestore, FCM)"]
+        DAO["DAOs Room<br/>(UserDao, AppointmentDao)"]
+        DB[("Room DB<br/>(Caché local)")]
+        UTIL["Utilidades<br/>(AlarmScheduler,<br/>PasswordHasher)"]
     end
+    
     SC --> VM
     VM --> UC
     UC --> IR
     RR -. implementa .-> IR
+    RR --> FB
     RR --> DAO
     DAO --> DB
-    RR --> AL
+    RR --> UTIL
+    
+    style UI fill:#4285F4,color:#fff
+    style DOMAIN fill:#FBBC04,color:#000
+    style DATA fill:#34A853,color:#fff

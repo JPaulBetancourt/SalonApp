@@ -151,7 +151,7 @@ fun LoginScreen(
 
         Spacer(Modifier.height(16.dp))
         Text(
-            text = "Dueño: admin / 1234",
+            text = " ",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

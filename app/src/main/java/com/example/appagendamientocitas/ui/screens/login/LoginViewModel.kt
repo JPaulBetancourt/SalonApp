@@ -67,11 +67,16 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun validate(s: LoginUiState): String? {
-        if (s.email.isBlank()) return "Ingresa tu usuario o email"
+        val trimmedEmail = s.email.trim()
+
+        if (trimmedEmail.isBlank()) return "Ingresa tu email"
+        val emailRegex = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
+        if (!emailRegex.matches(trimmedEmail)) {
+            return "El formato del email no es válido"
+        }
         if (s.password.isBlank()) return "Ingresa tu contraseña"
         if (s.isRegisterMode) {
             if (s.name.isBlank()) return "Ingresa tu nombre"
-            if (!s.email.contains("@")) return "El email no es válido"
             if (s.password.length < 6) return "La contraseña debe tener al menos 6 caracteres"
         }
         return null
