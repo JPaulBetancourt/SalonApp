@@ -23,7 +23,7 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 
 | Login | Panel Cliente | Panel Dueño |
 |---|---|---|
-| ![Login](docs/screenshots/Login.png) | ![Cliente](docs/screenshots/cliente.png) | ![Dueño](docs/screenshots/owner.png) |
+| ![Login](docs/screenshots/Login.png) | ![Cliente](docs/screenshots/cliente1.png) | ![Dueño](docs/screenshots/owner.png) |
 
 ## 🛠️ Stack tecnológico
 
