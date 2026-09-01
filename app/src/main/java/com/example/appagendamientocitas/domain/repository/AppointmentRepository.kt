@@ -16,4 +16,6 @@ interface AppointmentRepository {
     suspend fun updateStatus(id: Int, status: AppointmentStatus)
 
     suspend fun isSlotAvailable(date: String, time: String): Boolean
+
+    suspend fun getAppointmentsByDate(date: String): List<Appointment>
 }

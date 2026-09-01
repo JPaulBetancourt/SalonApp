@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.appagendamientocitas.data.local.SessionManager
 import com.example.appagendamientocitas.data.local.entity.Appointment
 import com.example.appagendamientocitas.domain.usecase.CreateAppointmentUseCase
+import com.example.appagendamientocitas.domain.usecase.GetAvailableSlotsUseCase
 import com.example.appagendamientocitas.domain.usecase.IsSlotAvailableUseCase
 import com.example.appagendamientocitas.domain.usecase.ObserveMyAppointmentsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,8 @@ class ClientViewModel @Inject constructor(
     private val sessionManager: SessionManager,
     private val observeMine: ObserveMyAppointmentsUseCase,
     private val createAppointment: CreateAppointmentUseCase,
-    private val isSlotAvailable: IsSlotAvailableUseCase
+    private val isSlotAvailable: IsSlotAvailableUseCase,
+    private val getAvailableSlots: GetAvailableSlotsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ClientUiState())
@@ -41,16 +43,37 @@ class ClientViewModel @Inject constructor(
     }
 
     fun onServiceChange(v: String) = update { it.copy(service = v, formError = null) }
-    fun onDateChange(v: String) = update { it.copy(date = v, formError = null, successMessage = null) }
-    fun onTimeChange(v: String) = update { it.copy(time = v, formError = null, successMessage = null) }
+    
+    fun onDateChange(v: String) {
+        update { it.copy(date = v, formError = null, successMessage = null, isSlotAvailable = null, time = "") }
+        if (isValidDate(v)) {
+            refreshAvailableSlots(v)
+        }
+    }
+
+    fun onTimeChange(v: String) = update { it.copy(time = v, formError = null, successMessage = null, isSlotAvailable = null) }
+
+    private fun refreshAvailableSlots(date: String) {
+        update { it.copy(isSlotChecking = true) }
+        viewModelScope.launch {
+            val slots = getAvailableSlots(date)
+            update { it.copy(availableSlots = slots, isSlotChecking = false) }
+        }
+    }
 
     fun checkSlot() {
         val s = _uiState.value
         if (s.date.isBlank() || s.time.isBlank()) return
+        if (!isValidDate(s.date) || !isValidTime(s.time)) return
+
+        update { it.copy(isSlotChecking = true, formError = null) }
+
         viewModelScope.launch {
             val available = isSlotAvailable(s.date, s.time)
-            _uiState.update {
+            update {
                 it.copy(
+                    isSlotChecking = false,
+                    isSlotAvailable = available,
                     formError = if (!available) "Ese horario ya está ocupado. Elige otro." else null
                 )
             }
@@ -64,9 +87,18 @@ class ClientViewModel @Inject constructor(
             update { it.copy(formError = error) }
             return
         }
+        
+        // Final check before submitting
         update { it.copy(isSubmitting = true, formError = null) }
 
         viewModelScope.launch {
+            // Verify availability one last time
+            if (!isSlotAvailable(s.date, s.time)) {
+                update { it.copy(isSubmitting = false, formError = "Alguien acaba de reservar ese horario. Elige otro.") }
+                refreshAvailableSlots(s.date)
+                return@launch
+            }
+
             val appointment = Appointment(
                 clientId = sessionManager.getCurrentUserId(),
                 clientName = sessionManager.getCurrentUserName(),
@@ -80,7 +112,7 @@ class ClientViewModel @Inject constructor(
                         it.copy(
                             isSubmitting = false,
                             successMessage = "¡Cita solicitada! Quedó como Pendiente.",
-                            service = "", date = "", time = ""
+                            service = "", date = "", time = "", availableSlots = emptyList()
                         )
                     }
                 }

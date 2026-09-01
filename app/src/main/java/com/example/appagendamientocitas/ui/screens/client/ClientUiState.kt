@@ -8,6 +8,9 @@ data class ClientUiState(
     val service: String = "",
     val date: String = "",   // yyyy-MM-dd
     val time: String = "",   // HH:mm
+    val availableSlots: List<String> = emptyList(),
+    val isSlotChecking: Boolean = false,
+    val isSlotAvailable: Boolean? = null,
     val isSubmitting: Boolean = false,
     val formError: String? = null,
     val successMessage: String? = null

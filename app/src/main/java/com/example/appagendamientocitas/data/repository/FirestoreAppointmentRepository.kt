@@ -167,4 +167,28 @@ class FirestoreAppointmentRepository @Inject constructor(
 
         return !occupied
     }
+
+    override suspend fun getAppointmentsByDate(date: String): List<Appointment> {
+        val query = firestore.collection("appointments")
+            .whereEqualTo("date", date)
+            .get()
+            .await()
+
+        return query.documents.mapNotNull { doc ->
+            try {
+                Appointment(
+                    id = doc.id.hashCode(),
+                    clientId = doc.getString("clientId") ?: "",
+                    clientName = doc.getString("clientName") ?: "",
+                    service = doc.getString("service") ?: "",
+                    date = doc.getString("date") ?: "",
+                    time = doc.getString("time") ?: "",
+                    status = AppointmentStatus.valueOf(doc.getString("status") ?: "PENDING"),
+                    createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
 }
