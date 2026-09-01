@@ -14,7 +14,7 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 
 - 🔐 **Autenticación segura**: Login y registro con Firebase Auth (email/password).
 - 🔒 **Seguridad de datos**: Contraseñas hasheadas con PBKDF2-HMAC-SHA256 (600k iteraciones, salt aleatorio) antes de cualquier procesamiento local.
-- ☁️ **Base de datos en la nube**: Firestore para sincronización de citas en tiempo real entre cliente y dueño, con caché local offline-first mediante Room.
+- ☁️ **Base de datos en la nube**: Firestore para sincronización de citas en tiempo real entre cliente y dueño.
 - 📅 **Panel Cliente**: Solicitud de citas con validación en vivo de disponibilidad de horarios.
 - 📊 **Panel Dueño**: Dashboard reactivo con contador de pendientes y acciones de aprobar/rechazar/completar.
 - 🔔 **Notificaciones Push**: Integración con Firebase Cloud Messaging (FCM) para recordatorios y actualizaciones de estado en tiempo real.
@@ -33,7 +33,7 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 | UI | Jetpack Compose + Material 3 |
 | Arquitectura | MVVM + Clean Architecture (3 capas) |
 | Navegación | Navigation Compose (rutas type-safe `@Serializable`) |
-| Base de datos | Room (caché local) + **Firestore** (fuente de verdad) |
+| Base de datos | **Firestore** (fuente de verdad) |
 | Autenticación | **Firebase Auth** |
 | Notificaciones | **Firebase Cloud Messaging (FCM)** |
 | Inyección | Hilt (KSP) |
