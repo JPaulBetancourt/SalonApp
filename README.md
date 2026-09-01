@@ -42,7 +42,7 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 
 ## 🔐 Seguridad y decisiones de diseño (ADR)
 
-- **ADR-01 — Migración a Arquitectura Cloud**: Se evolucionó de un MVP 100% local a una arquitectura híbrida. Firestore actúa como fuente de verdad para la sincronización multi-dispositivo, mientras que Room persiste como caché local para soporte offline.
+- **ADR-01 — Migración a Arquitectura Cloud**: Se evolucionó de un MVP 100% local a una arquitectura cloud. Firestore actúa como fuente de verdad para la sincronización multi-dispositivo.
 - **ADR-02 — Seguridad de Credenciales**: Aunque Firebase Auth gestiona la autenticación, se implementó hashing local con PBKDF2-HMAC-SHA256 (600,000 iteraciones, salt aleatorio por usuario y comparación en tiempo constante) como capa adicional de defensa en profundidad y cumplimiento de estándares académicos de seguridad.
 - **ADR-03 — Notificaciones**: Se reemplazó/complementó `AlarmManager` con FCM para permitir notificaciones push escalables desde la nube, superando las limitaciones de Doze Mode de Android.
 - **Reglas de Firestore**: Configuradas para permitir lectura/escritura solo a usuarios autenticados, con validación de propiedad de documentos.
@@ -65,11 +65,9 @@ flowchart TB
         IR["Repository Interfaces<br/>(AuthRepository,<br/>AppointmentRepository)"]
     end
     
-    subgraph DATA[" Datos (data)"]
+    subgraph DATA["💾 Datos (data)"]
         RR["Repository Implementations<br/>(FirebaseAuthRepository,<br/>FirestoreAppointmentRepository)"]
         FB["Firebase<br/>(Auth, Firestore, FCM)"]
-        DAO["DAOs Room<br/>(UserDao, AppointmentDao)"]
-        DB[("Room DB<br/>(Caché local)")]
         UTIL["Utilidades<br/>(AlarmScheduler,<br/>PasswordHasher)"]
     end
     
@@ -78,8 +76,6 @@ flowchart TB
     UC --> IR
     RR -. implementa .-> IR
     RR --> FB
-    RR --> DAO
-    DAO --> DB
     RR --> UTIL
     
     style UI fill:#4285F4,color:#fff
