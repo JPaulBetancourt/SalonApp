@@ -8,7 +8,7 @@
 
 Aplicación nativa de Android (Kotlin + Jetpack Compose + Material 3) para la gestión
 de citas de un salón de belleza con dos roles: **Cliente** y **Dueño**.
-MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
+Con recordatorios mediante AlarmManager.
 
 ## ✨ Características
 
