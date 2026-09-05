@@ -18,7 +18,7 @@ import androidx.room.PrimaryKey
     indices = [Index("clientId")]
 )
 data class Appointment(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey val id: String = "",
     val clientId: String,
     val clientName: String,
     val service: String,

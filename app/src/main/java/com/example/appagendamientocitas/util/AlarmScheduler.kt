@@ -25,7 +25,7 @@ class AlarmScheduler @Inject constructor(
             context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val intent = Intent(context, ReminderReceiver::class.java).apply {
-            putExtra(EXTRA_APPOINTMENT_ID, appointment.id)
+            putExtra(EXTRA_APPOINTMENT_ID, appointment.id.hashCode())
             putExtra(EXTRA_TITLE, "Cita en $MINUTES_BEFORE min")
             putExtra(
                 EXTRA_TEXT,
@@ -35,7 +35,7 @@ class AlarmScheduler @Inject constructor(
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            appointment.id,
+            appointment.id.hashCode(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -51,13 +51,13 @@ class AlarmScheduler @Inject constructor(
         }
     }
 
-    fun cancel(appointmentId: Int) {
+    fun cancel(appointmentId: String) {
         val alarmManager =
             context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, ReminderReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            appointmentId,
+            appointmentId.hashCode(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

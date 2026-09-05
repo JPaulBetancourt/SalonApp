@@ -2,6 +2,7 @@ package com.example.appagendamientocitas.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.appagendamientocitas.data.local.entity.Appointment
 import com.example.appagendamientocitas.data.local.entity.AppointmentStatus
@@ -10,11 +11,11 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface AppointmentDao {
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(appointment: Appointment): Long
 
     @Query("SELECT * FROM appointments WHERE id = :id")
-    suspend fun getById(id: Int): Appointment?
+    suspend fun getById(id: String): Appointment?
 
     @Query("SELECT * FROM appointments ORDER BY date ASC, time ASC")
     fun observeAll(): Flow<List<Appointment>>
@@ -23,7 +24,7 @@ interface AppointmentDao {
     fun observeByClient(clientId: String): Flow<List<Appointment>>
 
     @Query("UPDATE appointments SET status = :status WHERE id = :id")
-    suspend fun updateStatus(id: Int, status: AppointmentStatus)
+    suspend fun updateStatus(id: String, status: AppointmentStatus)
 
     @Query(
         """SELECT COUNT(*) FROM appointments 

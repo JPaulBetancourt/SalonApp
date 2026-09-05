@@ -11,9 +11,9 @@ interface AppointmentRepository {
 
     fun observeByClient(clientId: String): Flow<List<Appointment>>
 
-    suspend fun getById(id: Int): Appointment?
+    suspend fun getById(id: String): Appointment?
 
-    suspend fun updateStatus(id: Int, status: AppointmentStatus)
+    suspend fun updateStatus(id: String, status: AppointmentStatus)
 
     suspend fun isSlotAvailable(date: String, time: String): Boolean
 

@@ -35,11 +35,11 @@ class OwnerViewModel @Inject constructor(
         }
     }
 
-    fun approve(id: Int) = setStatus(id, AppointmentStatus.APPROVED)
-    fun reject(id: Int) = setStatus(id, AppointmentStatus.REJECTED)
-    fun complete(id: Int) = setStatus(id, AppointmentStatus.COMPLETED)
+    fun approve(id: String) = setStatus(id, AppointmentStatus.APPROVED)
+    fun reject(id: String) = setStatus(id, AppointmentStatus.REJECTED)
+    fun complete(id: String) = setStatus(id, AppointmentStatus.COMPLETED)
 
-    private fun setStatus(id: Int, status: AppointmentStatus) {
+    private fun setStatus(id: String, status: AppointmentStatus) {
         viewModelScope.launch { updateStatus(id, status) }
     }
 }

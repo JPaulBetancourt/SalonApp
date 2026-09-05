@@ -41,7 +41,7 @@ class FirestoreAppointmentRepository @Inject constructor(
                 .add(firestoreData)
                 .await()
 
-            val localId = appointmentDao.insert(appointment.copy(id = docRef.id.hashCode()))
+            val localId = appointmentDao.insert(appointment.copy(id = docRef.id))
             Result.success(localId)
         } catch (e: Exception) {
             Result.failure(e)
@@ -51,23 +51,16 @@ class FirestoreAppointmentRepository @Inject constructor(
     override fun observeAll(): Flow<List<Appointment>> = callbackFlow {
         try {
             val listener: ListenerRegistration = firestore.collection("appointments")
-                .orderBy("date")
-                .orderBy("time")
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
                         android.util.Log.e("Firestore", "Error observando todas las citas: ${error.message}")
-                        if (error.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
-                            android.util.Log.w("Firestore", "Falta índice compuesto date+time")
-                            trySend(emptyList())
-                        } else {
-                            close(error)
-                        }
+                        close(error)
                         return@addSnapshotListener
                     }
                     val appointments = snapshot?.documents?.mapNotNull { doc ->
                         try {
                             Appointment(
-                                id = doc.id.hashCode(),
+                                id = doc.id,
                                 clientId = doc.getString("clientId") ?: "",
                                 clientName = doc.getString("clientName") ?: "",
                                 service = doc.getString("service") ?: "",
@@ -79,14 +72,13 @@ class FirestoreAppointmentRepository @Inject constructor(
                         } catch (e: Exception) {
                             null
                         }
-                    } ?: emptyList()
+                    }?.sortedWith(compareBy({ it.date }, { it.time })) ?: emptyList()
                     trySend(appointments)
                 }
             awaitClose { listener.remove() }
         } catch (e: Exception) {
             android.util.Log.e("Firestore", "Error al iniciar listener observeAll: ${e.message}")
             trySend(emptyList())
-            awaitClose { }
         }
     }
 
@@ -94,23 +86,16 @@ class FirestoreAppointmentRepository @Inject constructor(
         try {
             val listener: ListenerRegistration = firestore.collection("appointments")
                 .whereEqualTo("clientId", clientId)
-                .orderBy("date")
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
                         android.util.Log.e("Firestore", "Error observando citas: ${error.message}")
-                        // Si es error de índice, enviar lista vacía en lugar de crash
-                        if (error.code == com.google.firebase.firestore.FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
-                            android.util.Log.w("Firestore", "Falta índice compuesto. Crearlo en: https://console.firebase.google.com/project/salonapp-330df/firestore/indexes")
-                            trySend(emptyList())
-                        } else {
-                            close(error)
-                        }
+                        close(error)
                         return@addSnapshotListener
                     }
                     val appointments = snapshot?.documents?.mapNotNull { doc ->
                         try {
                             Appointment(
-                                id = doc.id.hashCode(),
+                                id = doc.id,
                                 clientId = doc.getString("clientId") ?: "",
                                 clientName = doc.getString("clientName") ?: "",
                                 service = doc.getString("service") ?: "",
@@ -123,31 +108,53 @@ class FirestoreAppointmentRepository @Inject constructor(
                             android.util.Log.e("Firestore", "Error parseando documento: ${doc.id}", e)
                             null
                         }
-                    } ?: emptyList()
+                    }?.sortedByDescending { it.createdAt } ?: emptyList()
                     trySend(appointments)
                 }
             awaitClose { listener.remove() }
         } catch (e: Exception) {
             android.util.Log.e("Firestore", "Error al iniciar listener: ${e.message}")
             trySend(emptyList())
-            awaitClose { }
         }
     }
 
-    override suspend fun getById(id: Int): Appointment? =
+    override suspend fun getById(id: String): Appointment? =
         appointmentDao.getById(id)
 
-    override suspend fun updateStatus(id: Int, status: AppointmentStatus) {
+    override suspend fun updateStatus(id: String, status: AppointmentStatus) {
+        // Intentar actualizar localmente
         appointmentDao.updateStatus(id, status)
 
-        val appointment = appointmentDao.getById(id) ?: return
+        // Obtener la cita (de Room o Firestore) para programar la alarma
+        val appointment = appointmentDao.getById(id) ?: try {
+            val doc = firestore.collection("appointments").document(id).get().await()
+            if (doc.exists()) {
+                Appointment(
+                    id = doc.id,
+                    clientId = doc.getString("clientId") ?: "",
+                    clientName = doc.getString("clientName") ?: "",
+                    service = doc.getString("service") ?: "",
+                    date = doc.getString("date") ?: "",
+                    time = doc.getString("time") ?: "",
+                    status = AppointmentStatus.valueOf(doc.getString("status") ?: "PENDING"),
+                    createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis()
+                ).also {
+                    // Guardar en Room para futuras referencias
+                    appointmentDao.insert(it.copy(status = status))
+                }
+            } else null
+        } catch (e: Exception) {
+            null
+        } ?: return
+
+        // Actualizar Firestore
         firestore.collection("appointments")
-            .document(id.toString())
+            .document(id)
             .update("status", status.name)
             .await()
 
         if (status == AppointmentStatus.APPROVED) {
-            alarmScheduler.schedule(appointment)
+            alarmScheduler.schedule(appointment.copy(status = status))
         } else {
             alarmScheduler.cancel(id)
         }
@@ -177,7 +184,7 @@ class FirestoreAppointmentRepository @Inject constructor(
         return query.documents.mapNotNull { doc ->
             try {
                 Appointment(
-                    id = doc.id.hashCode(),
+                    id = doc.id,
                     clientId = doc.getString("clientId") ?: "",
                     clientName = doc.getString("clientName") ?: "",
                     service = doc.getString("service") ?: "",

@@ -33,7 +33,7 @@ class ObserveMyAppointmentsUseCase @Inject constructor(
 class UpdateAppointmentStatusUseCase @Inject constructor(
     private val repository: AppointmentRepository
 ) {
-    suspend operator fun invoke(id: Int, status: AppointmentStatus) =
+    suspend operator fun invoke(id: String, status: AppointmentStatus) =
         repository.updateStatus(id, status)
 }
 

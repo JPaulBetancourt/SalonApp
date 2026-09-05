@@ -10,7 +10,7 @@ import com.example.appagendamientocitas.data.local.entity.User
 
 @Database(
     entities = [User::class, Appointment::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
