@@ -8,13 +8,13 @@
 
 Aplicación nativa de Android (Kotlin + Jetpack Compose + Material 3) para la gestión
 de citas de un salón de belleza con dos roles: **Cliente** y **Dueño**.
-MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
+Con recordatorios mediante AlarmManager.
 
 ## ✨ Características
 
 - 🔐 **Autenticación segura**: Login y registro con Firebase Auth (email/password).
 - 🔒 **Seguridad de datos**: Contraseñas hasheadas con PBKDF2-HMAC-SHA256 (600k iteraciones, salt aleatorio) antes de cualquier procesamiento local.
-- ☁️ **Base de datos en la nube**: Firestore para sincronización de citas en tiempo real entre cliente y dueño, con caché local offline-first mediante Room.
+- ☁️ **Base de datos en la nube**: Firestore para sincronización de citas en tiempo real entre cliente y dueño.
 - 📅 **Panel Cliente**: Solicitud de citas con validación en vivo de disponibilidad de horarios.
 - 📊 **Panel Dueño**: Dashboard reactivo con contador de pendientes y acciones de aprobar/rechazar/completar.
 - 🔔 **Notificaciones Push**: Integración con Firebase Cloud Messaging (FCM) para recordatorios y actualizaciones de estado en tiempo real.
@@ -23,7 +23,7 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 
 | Login | Panel Cliente | Panel Dueño |
 |---|---|---|
-| ![Login](docs/screenshots/Login.png) | ![Cliente](docs/screenshots/cliente.png) | ![Dueño](docs/screenshots/owner.png) |
+| ![Login](docs/screenshots/Login.png) | ![Cliente](docs/screenshots/cliente1.png) | ![Dueño](docs/screenshots/owner.png) |
 
 ## 🛠️ Stack tecnológico
 
@@ -33,7 +33,7 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 | UI | Jetpack Compose + Material 3 |
 | Arquitectura | MVVM + Clean Architecture (3 capas) |
 | Navegación | Navigation Compose (rutas type-safe `@Serializable`) |
-| Base de datos | Room (caché local) + **Firestore** (fuente de verdad) |
+| Base de datos | **Firestore** (fuente de verdad) |
 | Autenticación | **Firebase Auth** |
 | Notificaciones | **Firebase Cloud Messaging (FCM)** |
 | Inyección | Hilt (KSP) |
@@ -42,7 +42,7 @@ MVP 100% local (sin backend) con recordatorios mediante AlarmManager.
 
 ## 🔐 Seguridad y decisiones de diseño (ADR)
 
-- **ADR-01 — Migración a Arquitectura Cloud**: Se evolucionó de un MVP 100% local a una arquitectura híbrida. Firestore actúa como fuente de verdad para la sincronización multi-dispositivo, mientras que Room persiste como caché local para soporte offline.
+- **ADR-01 — Migración a Arquitectura Cloud**: Se evolucionó de un MVP 100% local a una arquitectura cloud. Firestore actúa como fuente de verdad para la sincronización multi-dispositivo.
 - **ADR-02 — Seguridad de Credenciales**: Aunque Firebase Auth gestiona la autenticación, se implementó hashing local con PBKDF2-HMAC-SHA256 (600,000 iteraciones, salt aleatorio por usuario y comparación en tiempo constante) como capa adicional de defensa en profundidad y cumplimiento de estándares académicos de seguridad.
 - **ADR-03 — Notificaciones**: Se reemplazó/complementó `AlarmManager` con FCM para permitir notificaciones push escalables desde la nube, superando las limitaciones de Doze Mode de Android.
 - **Reglas de Firestore**: Configuradas para permitir lectura/escritura solo a usuarios autenticados, con validación de propiedad de documentos.
@@ -65,11 +65,9 @@ flowchart TB
         IR["Repository Interfaces<br/>(AuthRepository,<br/>AppointmentRepository)"]
     end
     
-    subgraph DATA[" Datos (data)"]
+    subgraph DATA["💾 Datos (data)"]
         RR["Repository Implementations<br/>(FirebaseAuthRepository,<br/>FirestoreAppointmentRepository)"]
         FB["Firebase<br/>(Auth, Firestore, FCM)"]
-        DAO["DAOs Room<br/>(UserDao, AppointmentDao)"]
-        DB[("Room DB<br/>(Caché local)")]
         UTIL["Utilidades<br/>(AlarmScheduler,<br/>PasswordHasher)"]
     end
     
@@ -78,8 +76,6 @@ flowchart TB
     UC --> IR
     RR -. implementa .-> IR
     RR --> FB
-    RR --> DAO
-    DAO --> DB
     RR --> UTIL
     
     style UI fill:#4285F4,color:#fff
